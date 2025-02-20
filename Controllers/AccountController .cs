@@ -18,7 +18,7 @@ public class AccountController : Controller
     {
       _httpClient = httpClient;
     }
-
+         
     [HttpGet("profile")]
     public async Task<IActionResult> GetSteamProfile([FromQuery] string steamId)
     {
