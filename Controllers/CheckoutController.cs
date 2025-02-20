@@ -164,7 +164,8 @@ namespace Rust_store_backend.Controllers
                 }
                 catch
                 {
-                    Console.Error.WriteLine($"Failed to deposit ingame money for order id {orderID}");
+                    Console.WriteLine($"Failed to deposit ingame money for order id {orderID}");
+                    return StatusCode(403);
                 }
                 
                 Console.WriteLine("Order completed!");
