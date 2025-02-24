@@ -9,18 +9,45 @@ namespace Rust_store_backend.Services
         {
             _context = context;
         }
-        public async Task DepositCommand(int amount, string steamId)
+
+        private async Task<RconClient> CreateClientAsync()
         {
             // var results = _context.Orders.Where(e => e.SteamId == "POTUS").ToList();
-            string rconHost = "10.244.17.98"; // Change to your server IP
+            string rconHost = Environment.GetEnvironmentVariable("DB_IP"); // Change to your server IP
             int rconPort = 28016;          // Default RCON port
-            string rconPassword = "your_rcon_password";
+            string rconPassword = Environment.GetEnvironmentVariable("RCON_PASS");
             var client = new RconClient();
             var connected = await client.ConnectAsync(rconHost, rconPort);
             var authenticated = await client.AuthenticateAsync(rconPassword);
+            if (!client.Authenticated)
+            {
+                throw new Exception("Failed to connect to rcon");
+            }
+            return client;
+        }
+        public async Task DepositCommand(int amount, string steamId)
+        {
+             var client = await CreateClientAsync();
+             string response = await client.SendCommandAsync($"deposit {steamId} {amount}");
+        }
+        public async Task RawCommand(string command)
+        {
+            var client = await CreateClientAsync();
+            string response = await client.SendCommandAsync(command);
+        }
+
+
+        public void AuthoriseShop()
+        {
+            string rconHost = Environment.GetEnvironmentVariable("DB_IP"); // Change to your server IP
+            int rconPort = 28016;          // Default RCON port
+            string rconPassword = Environment.GetEnvironmentVariable("RCON_PASS");
+            var client = new RconClient();
+            var connected =  client.Connect(rconHost, rconPort);
+            var authenticated = client.Authenticate(rconPassword);
             if (client.Authenticated)
             {
-                string response = await client.SendCommandAsync($"deposit {steamId} {amount}");
+                string response = client.SendCommand($"oxide.grant group default guishop.use");
                 Console.WriteLine("Server Response: " + response);
             }
             else
