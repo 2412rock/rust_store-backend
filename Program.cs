@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.UseKestrel(options =>
 {
-    options.Listen(IPAddress.Any, 4600, listenOptions =>
+    options.Listen(IPAddress.Any, 4300, listenOptions =>
     {
     });
 });
