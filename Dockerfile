@@ -20,7 +20,7 @@ WORKDIR /app
 COPY --from=build /app/out ./
 
 # Expose port 80 for the application
-EXPOSE 4500
+EXPOSE 4300
 
 # Define the command to run the application when the container starts
 ENTRYPOINT ["dotnet", "FFhub-backend.dll"]
