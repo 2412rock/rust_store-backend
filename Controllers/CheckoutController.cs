@@ -31,11 +31,12 @@ namespace Rust_store_backend.Controllers
         private Microsoft.Extensions.Configuration.IConfiguration _configuration { get; }
         private string _paypalClientId
         {
-            get { return "AfVX46MqyJqRxPEqUOXbMg87KGjmTE5eqYut14KyqbqEfrFYJsTO3vVn5r_2r00Jvkc-Vx18DMARk4oD"; }
+            get { return System.Environment.GetEnvironmentVariable("PAYPAL_CLIENT"); }
         }
         private string _paypalClientSecret
         {
-            get { return "EAZS6ZFbmDZa9VX0Annyl_acRRGk52BOZwhMqfVa3yKlkx87biTioetQkTYkGgPbth0PvfqORUPPsnCd"; }
+            get { return System.Environment.GetEnvironmentVariable("PAYPAL_SECRET"); }
+            
         }
 
         private readonly ILogger<CheckoutController> _logger;
