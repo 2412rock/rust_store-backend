@@ -23,4 +23,4 @@ COPY --from=build /app/out ./
 EXPOSE 4300
 
 # Define the command to run the application when the container starts
-ENTRYPOINT ["dotnet", "FFhub-backend.dll"]
+ENTRYPOINT ["dotnet", "Rust-store-backend.dll"]

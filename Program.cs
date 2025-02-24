@@ -53,8 +53,7 @@ builder.Services.AddScoped<StartupService>();
 var saPassword = Environment.GetEnvironmentVariable("SA_PASSWORD");
 
 //string hostIp = Environment.GetEnvironmentVariable("DB_IP");
-var env = builder.Environment.EnvironmentName;
-string hostIp = env == "Development" ? "192.168.1.237" : Environment.GetEnvironmentVariable("DB_IP");
+string hostIp =  Environment.GetEnvironmentVariable("DB_IP");
 
 builder.Services.AddDbContext<RustDBContext>(options =>
    options.UseSqlServer($"Server={hostIp},1436;Database=RustDB;User Id=sa;Password={saPassword};TrustServerCertificate=True"));
