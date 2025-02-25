@@ -8,7 +8,7 @@ using Rust_store_backend.Startup;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://*:4300");
+builder.WebHost.UseUrls("http://*:8432");
 
 // Add services to the container.
 
