@@ -134,16 +134,16 @@ namespace Rust_store_backend.Controllers
         {
             switch (quantity)
             {
+                case 1:
+                    return 120;
                 case 3:
                   return 500;
                 case 5:
                     return 1000;
                 case 10:
-                    return 2100;
-                case 29:
-                    return 11500;
-                case 59:
-                    return 11500;
+                    return 2300;
+                case 30:
+                    return 7000;
                 
                 default:
                     throw new Exception("Invalid amount");
