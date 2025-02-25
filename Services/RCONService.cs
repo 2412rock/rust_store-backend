@@ -10,12 +10,20 @@ namespace Rust_store_backend.Services
             _context = context;
         }
 
-        private async Task<RconClient> CreateClientAsync()
+        private async Task<RconClient> CreateClientAsync(bool usePassword = false, string password ="")
         {
             // var results = _context.Orders.Where(e => e.SteamId == "POTUS").ToList();
             string rconHost = Environment.GetEnvironmentVariable("DB_IP"); // Change to your server IP
             int rconPort = 28016;          // Default RCON port
-            string rconPassword = Environment.GetEnvironmentVariable("RCON_PASS");
+            string rconPassword = "";
+            if (usePassword)
+            {
+                rconPassword = password;
+            }
+            else
+            {
+                rconPassword = Environment.GetEnvironmentVariable("RCON_PASS");
+            }
             var client = new RconClient();
             var connected = await client.ConnectAsync(rconHost, rconPort);
             var authenticated = await client.AuthenticateAsync(rconPassword);
@@ -30,9 +38,9 @@ namespace Rust_store_backend.Services
              var client = await CreateClientAsync();
              string response = await client.SendCommandAsync($"deposit {steamId} {amount}");
         }
-        public async Task RawCommand(string command)
+        public async Task RawCommand(string command, string password)
         {
-            var client = await CreateClientAsync();
+            var client = await CreateClientAsync(usePassword:true, password);
             string response = await client.SendCommandAsync(command);
         }
 
