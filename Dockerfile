@@ -22,7 +22,7 @@ COPY --from=build /app/out ./
 # Expose port 80 for the application
 EXPOSE 8432
 
-ENV ASPNETCORE_URLS=http://*:8432
+ENV ASPNETCORE_URLS=http://*:4500
 
 # Define the command to run the application when the container starts
-ENTRYPOINT ["dotnet", "Rust store backend.dll", "--urls=http://*:8432"]
+ENTRYPOINT ["dotnet", "Rust store backend.dll", "--urls=http://*:4500"]

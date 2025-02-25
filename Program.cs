@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.UseKestrel(options =>
 {
-    options.Listen(IPAddress.Any, 8432); // Explicitly set the port here
+    options.Listen(IPAddress.Any, 4500); // Explicitly set the port here
 });
 
 // Add services to the container.
