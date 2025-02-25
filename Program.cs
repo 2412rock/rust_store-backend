@@ -8,12 +8,11 @@ using Rust_store_backend.Startup;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseKestrel(options =>
+builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    options.Listen(IPAddress.Any, 4300, listenOptions =>
-    {
-    });
+    serverOptions.ListenAnyIP(4300); // Use ListenAnyIP instead of Listen
 });
+
 // Add services to the container.
 
 builder.Services.AddControllers();
