@@ -110,7 +110,7 @@ namespace Rust_store_backend.Controllers
                 {
                     new PurchaseUnitRequest
                     {
-                        Amount = new AmountWithBreakdown { CurrencyCode = "EUR", MValue = totalAmount.ToString(), },
+                        Amount = new AmountWithBreakdown { CurrencyCode = "USD", MValue = totalAmount.ToString(), },
                     },
 
                 },
