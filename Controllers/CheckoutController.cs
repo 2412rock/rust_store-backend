@@ -87,7 +87,7 @@ namespace Rust_store_backend.Controllers
             catch (Exception ex)
             {
                 Console.Error.WriteLine("Failed to create order:", ex);
-                return StatusCode(500, new { error = "Failed to create order." });
+                return StatusCode(500, new { error = "Failed to create order. " + ex.Message });
             }
         }
 
