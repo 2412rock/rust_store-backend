@@ -16,6 +16,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
 WORKDIR /app
 #COPY backendcertificate.pfx /app/backendcertificate.pfx
+COPY backendcertificate.pfx /app/backendcertificate.pfx
 # Copy the built application from the build image
 COPY --from=build /app/out ./
 

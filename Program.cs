@@ -8,9 +8,16 @@ using Rust_store_backend.Startup;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseKestrel(options =>
+//builder.WebHost.UseKestrel(options =>
+//{
+//    options.Listen(IPAddress.Any, 4300); // Explicitly set the port here
+//});
+builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Listen(IPAddress.Any, 4300); // Explicitly set the port here
+    options.ListenAnyIP(4300, listenOptions =>
+    {
+        listenOptions.UseHttps("/app/backendcertificate.pfx");
+    });
 });
 
 // Add services to the container.
