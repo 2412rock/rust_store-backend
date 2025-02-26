@@ -58,7 +58,7 @@ namespace Rust_store_backend.Controllers
 
             // Initialize the PayPal SDK client
             PaypalServerSdkClient client = new PaypalServerSdkClient.Builder()
-                .Environment(PaypalServerSdk.Standard.Environment.Sandbox)
+                .Environment(PaypalServerSdk.Standard.Environment.Production)
                 .ClientCredentialsAuth(
                     new ClientCredentialsAuthModel.Builder(_paypalClientId, _paypalClientSecret).Build()
                 )
