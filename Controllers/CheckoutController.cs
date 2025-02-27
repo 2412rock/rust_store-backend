@@ -125,6 +125,7 @@ namespace Rust_store_backend.Controllers
             order.OrderId = orderId;
             order.SteamId = steamId;
             order.Amount = GetIngameCash(int.Parse(cartQuantity));
+            order.TransactionFinalized = false;
             await _context.AddAsync(order);
             await _context.SaveChangesAsync();
             return result;
@@ -157,14 +158,30 @@ namespace Rust_store_backend.Controllers
             try
             {
                 var result = await _CaptureOrder(orderID);
+                OrderDB order = null;
                 try
                 {
-                    var order = await _context.Orders.FirstOrDefaultAsync(e => e.OrderId == orderID);
+                    
+                    order = await _context.Orders.FirstOrDefaultAsync(e => e.OrderId == orderID);
+                    if(order != null)
+                    {
+                        order.TransactionFinalized = true;
+                        _context.Update(order);
+                        await _context.SaveChangesAsync();
+                    }
                     
                     await _rcon.DepositCommand(order.Amount, order.SteamId);
                 }
                 catch
                 {
+                    if(order != null)
+                    {
+                        order.TransactionFinalizedButPlayerDidNotGet = true;
+                        _context.Update(order);
+                        
+                        await _context.SaveChangesAsync();
+                    }
+                    
                     Console.WriteLine($"Failed to deposit ingame money for order id {orderID}");
                     return StatusCode(403);
                 }

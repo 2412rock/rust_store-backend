@@ -19,5 +19,7 @@ namespace Rust_store_backend.Models.DB
         public string OrderId { get; set; }
         public int Amount { get; set; }
         public string SteamId { get; set; }
+        public bool TransactionFinalized { get; set; }
+        public bool TransactionFinalizedButPlayerDidNotGet { get; set; }
     }
 }
