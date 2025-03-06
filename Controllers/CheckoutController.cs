@@ -20,6 +20,7 @@ using PaypalServerSdk.Standard.Models;
 using Rust_store_backend.Models.DB;
 using Rust_store_backend.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 namespace Rust_store_backend.Controllers
 {
     [ApiController]
@@ -58,7 +59,7 @@ namespace Rust_store_backend.Controllers
 
             // Initialize the PayPal SDK client
             PaypalServerSdkClient client = new PaypalServerSdkClient.Builder()
-                .Environment(PaypalServerSdk.Standard.Environment.Production)
+                .Environment(PaypalServerSdk.Standard.Environment.Production)//.Environment(PaypalServerSdk.Standard.Environment.Production)
                 .ClientCredentialsAuth(
                     new ClientCredentialsAuthModel.Builder(_paypalClientId, _paypalClientSecret).Build()
                 )
@@ -93,14 +94,79 @@ namespace Rust_store_backend.Controllers
 
         private async Task<dynamic> _CreateOrder(dynamic cart)
         {
+            Console.WriteLine("Creating Order, reading cart params");
             var cartArray = cart.GetProperty("cart");
             var cartElement1 = cartArray[0];
-            var cartQuantity = cartElement1.GetProperty("quantity").GetString();
-            var steamId = cartElement1.GetProperty("steamId").GetString();
+            string steamId = cartElement1.GetProperty("steamId").GetString();
+            var cart2 = cartElement1.GetProperty("cart");
+            JsonElement cartItems = cart2.GetProperty("items");
 
+            if (string.IsNullOrEmpty(steamId))
+            {
+                throw new ArgumentException("SteamId cannot be null or empty.");
+            }
+
+            var user = _context.Users.FirstOrDefault(u => u.SteamId == steamId);
+            if (user == null)
+            {
+                user = new DBUser { SteamId = steamId };
+                _context.Users.Add(user);
+                _context.SaveChanges();
+                
+            }
+
+            var order = new DBOrder
+            {
+                UserId = user.Id,
+                CreatedAt = DateTime.UtcNow,
+                TransactionFinalized = false,
+                TransactionFinalizedButPlayerDidNotGet = false,
+                OrderItems = new List<DBOrderItem>(),
+                Total = 0
+            };
+
+            foreach (JsonElement item in cartItems.EnumerateArray())
+            {
+                string productName = item.GetProperty("productName").GetString();
+                int price = item.GetProperty("price").GetInt32();
+                int quantity = item.GetProperty("numberOfItems").GetInt32();
+
+                int ingameCash;
+                try
+                {
+                   ingameCash = GetIngameCash(price);
+                }
+                catch(Exception e)
+                {
+                    throw new Exception($"Ingame cash value invalid {steamId}");
+                }
+                if(ingameCash != int.Parse(productName))
+                {
+                    throw new Exception($"Fraud detected for steam id {steamId}");
+                }
+                var product = _context.Products.FirstOrDefault(p => p.ProductName == productName);
+                if (product == null)
+                {
+                    throw new Exception($"Product name invalid {steamId}");
+                }
+                
+
+                var orderItem = new DBOrderItem
+                {
+                    ProductId = product.Id,
+                    NumberOfItems = quantity,
+                    Subtotal = price * quantity
+                };
+                order.Total += orderItem.Subtotal;
+                order.OrderItems.Add(orderItem);
+                _context.SaveChanges();
+            }
+
+            order.TotalNumberOfItems = order.OrderItems.Sum(oi => oi.NumberOfItems);
+            
 
             var pricePerItem = 1; // Example unit price
-            var totalAmount = pricePerItem * int.Parse(cartQuantity);
+
             OrdersCreateInput ordersCreateInput = new OrdersCreateInput
             {
                 Body = new OrderRequest
@@ -110,9 +176,8 @@ namespace Rust_store_backend.Controllers
                 {
                     new PurchaseUnitRequest
                     {
-                        Amount = new AmountWithBreakdown { CurrencyCode = "USD", MValue = totalAmount.ToString(), },
+                        Amount = new AmountWithBreakdown { CurrencyCode = "USD", MValue = order.Total.ToString(), },
                     },
-
                 },
 
                 },
@@ -120,14 +185,15 @@ namespace Rust_store_backend.Controllers
 
 
             ApiResponse<Order> result = await _ordersController.OrdersCreateAsync(ordersCreateInput);
-            var orderId = result.Data.Id;
-            var order = new OrderDB();
-            order.OrderId = orderId;
-            order.SteamId = steamId;
-            order.Amount = GetIngameCash(int.Parse(cartQuantity));
+            //var orderId = result.Data.Id;
+            //var order = new OrderDB();
+            //order.OrderId = orderId;
+            //order.SteamId = steamId;
+            //order.Amount = GetIngameCash(int.Parse(cartQuantity));
+            order.PaypalOrderId = result.Data.Id;
+            _context.Orders.Add(order);
             order.TransactionFinalized = false;
-            await _context.AddAsync(order);
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
             return result;
         }
 
@@ -158,19 +224,24 @@ namespace Rust_store_backend.Controllers
             try
             {
                 var result = await _CaptureOrder(orderID);
-                OrderDB order = null;
+                DBOrder order = null;
                 try
                 {
-                    
-                    order = await _context.Orders.FirstOrDefaultAsync(e => e.OrderId == orderID);
-                    if(order != null)
+                    if(orderID != null)
                     {
-                        order.TransactionFinalized = true;
-                        _context.Update(order);
-                        await _context.SaveChangesAsync();
+                        order = await _context.Orders.FirstOrDefaultAsync(e => e.PaypalOrderId == orderID);
+                        if (order != null)
+                        {
+                            order.TransactionFinalized = true;
+                            _context.Update(order);
+                            await _context.SaveChangesAsync();
+                        }
                     }
-                    
-                    await _rcon.DepositCommand(order.Amount, order.SteamId);
+                    else
+                    {
+                        return StatusCode(500, "Order id was null");
+                    }
+                     await _rcon.DepositCommand(order.Id, order.UserId.ToString());
                 }
                 catch
                 {
@@ -178,7 +249,6 @@ namespace Rust_store_backend.Controllers
                     {
                         order.TransactionFinalizedButPlayerDidNotGet = true;
                         _context.Update(order);
-                        
                         await _context.SaveChangesAsync();
                     }
                     
