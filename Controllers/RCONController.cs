@@ -15,7 +15,7 @@ namespace Rust_store_backend.Controllers
         [HttpPost("command")]
         public async Task<IActionResult> ExecuteCommand([FromBody] Command command)
         {
-            var response = await _rcon.RawCommand(command.CommandText, command.Password);
+            var response = await _rcon.RawCommandAsync(command.CommandText, command.Password);
             return Ok(response);
         }
     }

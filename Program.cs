@@ -54,8 +54,9 @@ builder.Services.AddCors(options =>
 builder.Logging.ClearProviders(); // Remove default providers
 builder.Logging.AddConsole();
 builder.Services.AddHttpClient();
-builder.Services.AddTransient<RCONService>();
+builder.Services.AddScoped<RCONService>();
 builder.Services.AddScoped<StartupService>();
+builder.Services.AddSingleton<DepositToAllService>();
 
 
 var saPassword = Environment.GetEnvironmentVariable("SA_PASSWORD");

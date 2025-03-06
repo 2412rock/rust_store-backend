@@ -33,17 +33,47 @@ namespace Rust_store_backend.Services
             }
             return client;
         }
-        public async Task<string> DepositCommand(int amount, string steamId)
+
+        private RconClient CreateClient(bool usePassword = false, string password = "")
+        {
+            // var results = _context.Orders.Where(e => e.SteamId == "POTUS").ToList();
+            string rconHost = Environment.GetEnvironmentVariable("DB_IP"); // Change to your server IP
+            int rconPort = 28016;          // Default RCON port
+            string rconPassword = "";
+            if (usePassword)
+            {
+                rconPassword = password;
+            }
+            else
+            {
+                rconPassword = Environment.GetEnvironmentVariable("RCON_PASS");
+            }
+            var client = new RconClient();
+            var connected = client.Connect(rconHost, rconPort);
+            var authenticated =  client.Authenticate(rconPassword);
+            if (!client.Authenticated)
+            {
+                throw new Exception("Failed to connect to rcon");
+            }
+            return client;
+        }
+        public async Task<string> DepositCommandAsync(int amount, string steamId)
         {
             var client = await CreateClientAsync();
             string response = await client.SendCommandAsync($"deposit {steamId} {amount}");
             return response;
         }
-        public async Task<string> RawCommand(string command, string password)
+        public async Task<string> RawCommandAsync(string command, string password)
         {
             var client = await CreateClientAsync(usePassword:true, password);
-            await Task.Delay(1500);
             string response = await client.SendCommandAsync(command);
+            return response;
+        }
+
+        public string RawCommand(string command)
+        {
+            var client = CreateClient(usePassword: false);
+            string response = client.SendCommand(command);
             return response;
         }
 

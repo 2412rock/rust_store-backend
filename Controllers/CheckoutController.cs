@@ -241,7 +241,7 @@ namespace Rust_store_backend.Controllers
                     {
                         return StatusCode(500, "Order id was null");
                     }
-                     await _rcon.DepositCommand(order.Id, order.UserId.ToString());
+                     await _rcon.DepositCommandAsync(order.Id, order.UserId.ToString());
                 }
                 catch
                 {
