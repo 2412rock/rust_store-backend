@@ -33,15 +33,17 @@ namespace Rust_store_backend.Services
             }
             return client;
         }
-        public async Task DepositCommand(int amount, string steamId)
+        public async Task<string> DepositCommand(int amount, string steamId)
         {
-             var client = await CreateClientAsync();
-             string response = await client.SendCommandAsync($"deposit {steamId} {amount}");
+            var client = await CreateClientAsync();
+            string response = await client.SendCommandAsync($"deposit {steamId} {amount}");
+            return response;
         }
-        public async Task RawCommand(string command, string password)
+        public async Task<string> RawCommand(string command, string password)
         {
             var client = await CreateClientAsync(usePassword:true, password);
             string response = await client.SendCommandAsync(command);
+            return response;
         }
 
 
