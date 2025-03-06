@@ -42,6 +42,7 @@ namespace Rust_store_backend.Services
         public async Task<string> RawCommand(string command, string password)
         {
             var client = await CreateClientAsync(usePassword:true, password);
+            await Task.Delay(1500);
             string response = await client.SendCommandAsync(command);
             return response;
         }
