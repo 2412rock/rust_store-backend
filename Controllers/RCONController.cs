@@ -7,9 +7,15 @@ namespace Rust_store_backend.Controllers
     public class RCONController: Controller
     {
         private readonly RCONService _rcon;
-        public RCONController(RCONService rcon)
+        public RCONController(RCONService rcon, DepositToAllService _)
         {
             _rcon = rcon;
+        }
+
+        [HttpGet("trigger")]
+        public async Task<IActionResult> ExecuteCommand()
+        {
+            return Ok("success");
         }
 
         [HttpPost("command")]
