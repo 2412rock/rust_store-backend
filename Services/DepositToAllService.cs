@@ -57,7 +57,7 @@ namespace Rust_store_backend.Services
                     Console.WriteLine("Unable to send command");
                 }
                 
-                Thread.Sleep(1200000); // 1200000 Sleep for 20 minutes (1,200,000 milliseconds)
+                Thread.Sleep(6000); // 1200000 Sleep for 20 minutes (1,200,000 milliseconds)
             }
 
         }
