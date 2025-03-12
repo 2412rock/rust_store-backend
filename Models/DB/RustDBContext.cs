@@ -82,6 +82,7 @@ namespace Rust_store_backend.Models.DB
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+        public string Game { get; set; }
 
         public int UserId { get; set; }
 

@@ -98,6 +98,7 @@ namespace Rust_store_backend.Controllers
             var cartArray = cart.GetProperty("cart");
             var cartElement1 = cartArray[0];
             string steamId = cartElement1.GetProperty("steamId").GetString();
+            string game = cartElement1.GetProperty("game").GetString();
             var cart2 = cartElement1.GetProperty("cart");
             JsonElement cartItems = cart2.GetProperty("items");
 
@@ -117,6 +118,7 @@ namespace Rust_store_backend.Controllers
 
             var order = new DBOrder
             {
+                Game = game,
                 UserId = user.Id,
                 CreatedAt = DateTime.UtcNow,
                 TransactionFinalized = false,
@@ -127,24 +129,21 @@ namespace Rust_store_backend.Controllers
 
             foreach (JsonElement item in cartItems.EnumerateArray())
             {
-                string productName = item.GetProperty("productName").GetString();
+                //string productName = item.GetProperty("productName").GetString();
                 int price = item.GetProperty("price").GetInt32();
                 int quantity = item.GetProperty("numberOfItems").GetInt32();
 
-                int ingameCash;
+                string ingameProduct;
                 try
                 {
-                   ingameCash = GetIngameCash(price);
+                    ingameProduct = GetIngameProducts(price, game);
                 }
                 catch(Exception e)
                 {
                     throw new Exception($"Ingame cash value invalid {steamId}");
                 }
-                if(ingameCash != int.Parse(productName))
-                {
-                    throw new Exception($"Fraud detected for steam id {steamId}");
-                }
-                var product = _context.Products.FirstOrDefault(p => p.ProductName == productName);
+
+                var product = _context.Products.FirstOrDefault(p => p.ProductName == ingameProduct);
                 if (product == null)
                 {
                     throw new Exception($"Product name invalid {steamId}");
@@ -197,24 +196,51 @@ namespace Rust_store_backend.Controllers
             return result;
         }
 
-        private int GetIngameCash(int quantity)
+        private string GetIngameProducts(int quantity, string game)
         {
-            switch (quantity)
+            if(game == "rust")
             {
-                case 1:
-                    return 120;
-                case 3:
-                  return 500;
-                case 5:
-                    return 1000;
-                case 10:
-                    return 2300;
-                case 30:
-                    return 7000;
-                
-                default:
-                    throw new Exception("Invalid amount");
+                switch (quantity)
+                {
+                    case 1:
+                        return "120 shop points";
+                    case 3:
+                        return "500 shop points";
+                    case 5:
+                        return "1000 shop points";
+                    case 10:
+                        return "2300 shop points";
+                    case 30:
+                        return "7000 shop points";
+
+                    default:
+                        throw new Exception("Invalid amount");
+                }
             }
+            else if(game == "eco")
+            {
+                switch (quantity)
+                {
+                    case 1:
+                        return "1 crafting permit";
+                    case 3:
+                        return "5 crafting permits";
+                    case 5:
+                        return "10 crafting permits";
+                    //case 10:
+                    //    return "23 crafting permits";
+                    //case 30:
+                    //    return "70 crafting permits";
+
+                    default:
+                        throw new Exception("Invalid amount");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid game");
+            }
+            
         }
 
 
@@ -229,7 +255,7 @@ namespace Rust_store_backend.Controllers
                 {
                     if(orderID != null)
                     {
-                        order = await _context.Orders.FirstOrDefaultAsync(e => e.PaypalOrderId == orderID);
+                        order = await _context.Orders.Include(e => e.OrderItems).Include(e => e.User).FirstOrDefaultAsync(e => e.PaypalOrderId == orderID);
                         if (order != null)
                         {
                             order.TransactionFinalized = true;
@@ -241,7 +267,31 @@ namespace Rust_store_backend.Controllers
                     {
                         return StatusCode(500, "Order id was null");
                     }
-                     await _rcon.DepositCommandAsync(order.Id, order.UserId.ToString());
+                    if(order.Game == "rust")
+                    {
+                        var steamId = order.User.SteamId;
+                        foreach (var item in order.OrderItems)
+                        {
+                            for (int i = 0; i < item.NumberOfItems; i++)
+                            {
+                                var product = await _context.Products.FirstOrDefaultAsync(e => e.Id == item.ProductId);
+                                await RustGivePlayerProduct(product.ProductName, steamId);
+                            }
+                        }
+                    }
+                    else if(order.Game == "eco")
+                    {
+                        var steamId = order.User.SteamId;
+                        foreach(var item in order.OrderItems)
+                        {
+                            for (int i = 0; i < item.NumberOfItems; i++)
+                            {
+                                var product = await _context.Products.FirstOrDefaultAsync(e => e.Id == item.ProductId);
+                                await EcoGivePlayerProduct(product.ProductName, steamId);
+                            }
+                        }
+                    }
+                     
                 }
                 catch
                 {
@@ -267,6 +317,59 @@ namespace Rust_store_backend.Controllers
             }
         }
 
+        private async Task EcoGivePlayerProduct(string productName, string steamId)
+        {   
+            if(productName == "1 crafting permit")
+            {
+                await _rcon.EcoRawCommandAsync($"gc-givepermit {steamId}");
+            }
+            else if (productName == "5 crafting permits")
+            {
+                for(int i=0; i < 5; i++)
+                {
+                    await _rcon.EcoRawCommandAsync($"gc-givepermit {steamId}");
+                }
+            }
+            else if (productName == "10 crafting permits")
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    await _rcon.EcoRawCommandAsync($"gc-givepermit {steamId}");
+                }
+            }
+            //else if (productName == "23 crafting permits")
+            //{
+            //    await _rcon.EcoRawCommandAsync($"gc-givepermit");
+            //}
+            //else if (productName == "70 crafting permits")
+            //{
+            //    await _rcon.EcoRawCommandAsync($"gc-givepermit");
+            //}
+        }
+
+        private async Task RustGivePlayerProduct(string productName, string steamId)
+        {
+            if (productName == "120 shop points")
+            {
+                await _rcon.DepositCommandAsync(120, steamId);
+            }
+            else if (productName == "500 shop points")
+            {
+                await _rcon.DepositCommandAsync(500, steamId);
+            }
+            else if (productName == "1000 shop points")
+            {
+                await _rcon.DepositCommandAsync(1000, steamId);
+            }
+            else if (productName == "2300 shop points")
+            {
+                await _rcon.DepositCommandAsync(2300, steamId);
+            }
+            else if (productName == "7000 shop points")
+            {
+                await _rcon.DepositCommandAsync(7000, steamId);
+            }
+        }
 
         private async Task<dynamic> _CaptureOrder(string orderID)
         {

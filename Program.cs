@@ -4,7 +4,7 @@ using Rust_store_backend.Services;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Rust_store_backend.Models.DB;
-using Rust_store_backend.Startup;
+using Rust_store_backend;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +68,7 @@ builder.Services.AddDbContext<RustDBContext>(options =>
    options.UseSqlServer($"Server={hostIp},1436;Database=RustDB;User Id=sa;Password={saPassword};TrustServerCertificate=True"));
 
 var app = builder.Build();
+
 
 app.Lifetime.ApplicationStarted.Register(async () =>
 {

@@ -34,6 +34,30 @@ namespace Rust_store_backend.Services
             return client;
         }
 
+        private async Task<RconClient> EcoCreateClientAsync(bool usePassword = false, string password = "")
+        {
+            // var results = _context.Orders.Where(e => e.SteamId == "POTUS").ToList();
+            string rconHost = Environment.GetEnvironmentVariable("DB_IP"); // Change to your server IP
+            int rconPort = 3002;          // Default RCON port
+            string rconPassword = "";
+            if (usePassword)
+            {
+                rconPassword = password;
+            }
+            else
+            {
+                rconPassword = Environment.GetEnvironmentVariable("RCON_PASS");
+            }
+            var client = new RconClient();
+            var connected = await client.ConnectAsync(rconHost, rconPort);
+            var authenticated = await client.AuthenticateAsync(rconPassword);
+            if (!client.Authenticated)
+            {
+                throw new Exception("Failed to connect to rcon");
+            }
+            return client;
+        }
+
         private RconClient CreateClient(bool usePassword = false, string password = "")
         {
             // var results = _context.Orders.Where(e => e.SteamId == "POTUS").ToList();
@@ -66,6 +90,13 @@ namespace Rust_store_backend.Services
         public async Task<string> RawCommandAsync(string command, string password)
         {
             var client = await CreateClientAsync(usePassword:true, password);
+            string response = await client.SendCommandAsync(command);
+            return response;
+        }
+
+        public async Task<string> EcoRawCommandAsync(string command)
+        {
+            var client = await EcoCreateClientAsync(usePassword: false);
             string response = await client.SendCommandAsync(command);
             return response;
         }
