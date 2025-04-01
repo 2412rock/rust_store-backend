@@ -7,8 +7,8 @@ namespace Rust_store_backend.Services
     {
         public DepositToAllService()
         {
-            Thread thread = new Thread(new ThreadStart(MatchCheck));
-            thread.Start();
+            //Thread thread = new Thread(new ThreadStart(MatchCheck));
+            //thread.Start();
         }
 
         private RconClient CreateClient(bool usePassword = false, string password = "")
@@ -41,25 +41,25 @@ namespace Rust_store_backend.Services
             return response;
         }
 
-        private void MatchCheck()
-        {
-            while (true)
-            {
-                try
-                {
-                    using(var client = CreateClient())
-                    {
-                        RawCommand(client, "deposit * 20");
-                    }
-                }
-                catch(Exception e)
-                {
-                    Console.WriteLine("Unable to send command");
-                }
+        //private void MatchCheck()
+        //{
+        //    while (true)
+        //    {
+        //        try
+        //        {
+        //            using(var client = CreateClient())
+        //            {
+        //                RawCommand(client, "deposit * 20");
+        //            }
+        //        }
+        //        catch(Exception e)
+        //        {
+        //            Console.WriteLine("Unable to send command");
+        //        }
                 
-                Thread.Sleep(1200000); // 1200000 Sleep for 20 minutes (1,200,000 milliseconds)
-            }
+        //        Thread.Sleep(1200000); // 1200000 Sleep for 20 minutes (1,200,000 milliseconds)
+        //    }
 
-        }
+        //}
     }
 }
